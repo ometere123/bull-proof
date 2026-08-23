@@ -2,7 +2,7 @@
 set -euo pipefail
 
 RPC="${GENLAYER_RPC:-https://studio.genlayer.com/api}"
-CONTRACT="contracts/bullproof.py"
+CONTRACT="contracts/nullproof.py"
 
 if ! command -v genlayer >/dev/null 2>&1; then
   echo "GenLayer CLI is not installed. Install with: npm install -g genlayer" >&2
