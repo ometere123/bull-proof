@@ -1,6 +1,6 @@
 # Integration Guide
 
-BullProof is designed to be consumed by other Intelligent Contracts.
+NullProof is designed to be consumed by other Intelligent Contracts.
 
 ## Pin the definition
 
@@ -9,14 +9,14 @@ Do not rely only on `claim_id`.
 Read the sealed claim and record the `definition_hash` your contract accepts:
 
 ```python
-claim = bullproof.get_claim(claim_id)
+claim = nullproof.get_claim(claim_id)
 expected = claim["definition_hash"]
 ```
 
 Later:
 
 ```python
-if bullproof.is_absence_established(claim_id, expected):
+if nullproof.is_absence_established(claim_id, expected):
     ...
 ```
 
@@ -38,23 +38,23 @@ window: challenge start -> challenge end
 max gap: 15 minutes
 ```
 
-Execution after the challenge period requires BullProof's `ABSENCE_ESTABLISHED` result for exactly that hash.
+Execution after the challenge period requires NullProof's `ABSENCE_ESTABLISHED` result for exactly that hash.
 
 ## Example: insurance exclusion gate
 
 A settlement contract can require that no official product recall was found across the manufacturer and regulator registries during the relevant coverage window.
 
-BullProof does not move insurance funds itself. It supplies the reusable public-evidence certificate.
+NullProof does not move insurance funds itself. It supplies the reusable public-evidence certificate.
 
 ## Example: autonomous-agent revocation
 
 An agent can be authorised to execute only if no revocation notice appears on a declared policy endpoint before a deadline.
 
-The consumer should still validate the source set during claim creation; BullProof guarantees that the sealed definition cannot later be weakened.
+The consumer should still validate the source set during claim creation; NullProof guarantees that the sealed definition cannot later be weakened.
 
 ## Consumer checklist
 
-Before trusting a BullProof certificate, a downstream contract or protocol should verify:
+Before trusting a NullProof certificate, a downstream contract or protocol should verify:
 
 1. the subject is the intended entity;
 2. the qualifying event definition is sufficiently precise;
@@ -68,7 +68,7 @@ Before trusting a BullProof certificate, a downstream contract or protocol shoul
 
 ```python
 @gl.contract_interface
-class IBullProof:
+class INullProof:
     class View:
         def get_claim(self, claim_id: u256) -> dict: ...
         def get_source(self, source_id: u256) -> dict: ...
