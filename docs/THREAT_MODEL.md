@@ -2,7 +2,7 @@
 
 ## Security goal
 
-BullProof should never turn a weak, retrospective, incomplete, or leader-controlled observation process into a strong `ABSENCE_ESTABLISHED` certificate.
+NullProof should never turn a weak, retrospective, incomplete, or leader-controlled observation process into a strong `ABSENCE_ESTABLISHED` certificate.
 
 ## Malicious requester chooses favourable sources
 
@@ -10,7 +10,7 @@ BullProof should never turn a weak, retrospective, incomplete, or leader-control
 
 Mitigation: the complete sealed source set is committed into `definition_hash`. A consumer must explicitly accept that definition hash or inspect the source set.
 
-BullProof proves absence **over the declared evidence surface**, not the whole internet.
+NullProof proves absence **over the declared evidence surface**, not the whole internet.
 
 ## Retrospective cherry-picking
 
@@ -70,7 +70,7 @@ Observation is permissionless. A caller can only record `AMBIGUOUS` or `UNAVAILA
 
 ## Universal absence
 
-BullProof intentionally does not provide it.
+NullProof intentionally does not provide it.
 
 `ABSENCE_ESTABLISHED` means only:
 
