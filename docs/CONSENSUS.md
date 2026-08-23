@@ -41,7 +41,7 @@ For `NOT_FOUND`, `AMBIGUOUS`, and `UNAVAILABLE`, evidence must be empty.
 
 ## Why exact verdict matching
 
-BullProof uses coarse terminal semantic classes rather than comparing model prose. Reason text is diagnostic only.
+NullProof uses coarse terminal semantic classes rather than comparing model prose. Reason text is diagnostic only.
 
 The classes are settlement-relevant:
 
@@ -79,6 +79,6 @@ After the window, `finalize` evaluates every required source using only integer 
 
 ## Evidence-surface boundary
 
-Source selection is requester-defined policy, not a validator judgment. BullProof makes that policy explicit, immutable before monitoring begins, and committed into `definition_hash`.
+Source selection is requester-defined policy, not a validator judgment. NullProof makes that policy explicit, immutable before monitoring begins, and committed into `definition_hash`.
 
 Consumers should only accept hashes whose source set, event definition, time window, and maximum-gap policy meet their own requirements.
