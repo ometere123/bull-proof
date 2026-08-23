@@ -625,7 +625,13 @@ class NullProof(gl.Contract):
         claim.certificate_hash = ""
         claim.reason = ""
 
-        ClaimCreated(claim_id, gl.message.sender_address, start_at=start, end_at=end, max_gap_seconds=gap).emit()
+        ClaimCreated(
+            claim_id,
+            gl.message.sender_address,
+            start_at=u256(start),
+            end_at=u256(end),
+            max_gap_seconds=u256(gap),
+        ).emit()
         return claim_id
 
     @gl.public.write
@@ -687,7 +693,11 @@ class NullProof(gl.Contract):
         claim.definition_hash = Keccak256(self._definition_payload(claim_id).encode("utf-8")).hexdigest()
         claim.status = u8(CLAIM_MONITORING)
         claim.sealed_at = u256(now)
-        ClaimSealed(claim_id, definition_hash=str(claim.definition_hash), source_count=len(claim.source_ids)).emit()
+        ClaimSealed(
+            claim_id,
+            definition_hash=str(claim.definition_hash),
+            source_count=u256(len(claim.source_ids)),
+        ).emit()
 
     @gl.public.write
     def abort_draft(self, claim_id: u256) -> None:
@@ -768,7 +778,13 @@ class NullProof(gl.Contract):
             claim.reason = "a required source produced consensus-backed evidence of the qualifying event"
             claim.certificate_hash = Keccak256(self._certificate_payload(claim_id, CLAIM_EVENT_FOUND).encode("utf-8")).hexdigest()
 
-        ObservationRecorded(observation_id, claim_id, source_id, u8(verdict), observed_at=now).emit()
+        ObservationRecorded(
+            observation_id,
+            claim_id,
+            source_id,
+            u8(verdict),
+            observed_at=u256(now),
+        ).emit()
         if verdict == OBS_FOUND:
             ClaimFinalized(claim_id, u8(CLAIM_EVENT_FOUND), certificate_hash=str(claim.certificate_hash)).emit()
         return observation_id
@@ -811,7 +827,7 @@ class NullProof(gl.Contract):
             claim_id,
             u8(terminal),
             certificate_hash=str(claim.certificate_hash),
-            failing_sources=failing_sources,
+                failing_sources=u256(failing_sources),
         ).emit()
 
     @gl.public.view
