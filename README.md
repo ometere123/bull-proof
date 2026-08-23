@@ -135,7 +135,7 @@ nullproof.finalize(claim_id)
 ok = nullproof.is_absence_established(claim_id, expected_definition_hash)
 ```
 
-All configured sources are required. A duplicated URL is rejected. The `definition_hash` commits to the subject, event definition, time window, maximum-gap policy, and ordered source set.
+All configured sources are required. A duplicated URL is rejected. The `definition_hash` commits to the normalized subject and event definition, exact time window, maximum-gap policy, and ordered source set. Stored source URLs are canonicalized to lowercase HTTPS hosts, strip fragments, and use `/` when no path is supplied, so equivalent URL spellings cannot bypass duplicate detection.
 
 ## Example use cases
 

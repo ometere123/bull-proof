@@ -139,14 +139,6 @@ class ClaimSealed(gl.Event):
     def __init__(self, claim_id: u256, /, **blob): ...
 
 
-class ObservationRecorded(gl.Event):
-    def __init__(self, observation_id: u256, claim_id: u256, source_id: u256, verdict: u8, /, **blob): ...
-
-
-class ClaimFinalized(gl.Event):
-    def __init__(self, claim_id: u256, status: u8, /, **blob): ...
-
-
 class ClaimAborted(gl.Event):
     def __init__(self, claim_id: u256, /, **blob): ...
 
@@ -193,17 +185,17 @@ def observation_name(verdict: int) -> str:
 
 
 def host_of(url: str) -> str:
-    text = str(url).strip().lower()
-    if not text.startswith("https://"):
+    text = str(url).strip()
+    if len(text) < len("https://") or text[:8].lower() != "https://":
         return ""
-    text = text[len("https://"):]
-    for delimiter in ("/", "?", "#"):
+    text = text[8:]
+    for delimiter in ("/", "?"):
         index = text.find(delimiter)
         if index != -1:
             text = text[:index]
     if "@" in text or ":" in text:
         return ""
-    return text.strip(".")
+    return text.lower().strip(".")
 
 
 def is_private_ipv4_parts(parts: list[str]) -> bool:
@@ -230,11 +222,14 @@ def validate_url(url: str) -> str:
     value = str(url).strip()
     if len(value) == 0 or len(value) > MAX_URL_LEN:
         raise gl.vm.UserError(f"{ERR_EXPECTED}: url must be 1..{MAX_URL_LEN} chars")
-    if not value.startswith("https://"):
+    if len(value) < len("https://") or value[:8].lower() != "https://":
         raise gl.vm.UserError(f"{ERR_EXPECTED}: only https urls are accepted")
     if "%" in value or "\\" in value:
         raise gl.vm.UserError(f"{ERR_EXPECTED}: ambiguous url encoding is rejected")
 
+    fragment = value.find("#")
+    if fragment != -1:
+        value = value[:fragment]
     host = host_of(value)
     if len(host) == 0 or len(host) > 253 or "." not in host:
         raise gl.vm.UserError(f"{ERR_EXPECTED}: invalid public dns host")
@@ -256,7 +251,16 @@ def validate_url(url: str) -> str:
             raise gl.vm.UserError(f"{ERR_EXPECTED}: ambiguous ip-like host is rejected")
         if is_private_ipv4_parts(labels[:4]):
             raise gl.vm.UserError(f"{ERR_EXPECTED}: private ip-like host is rejected")
-    return value
+    remainder = value[8:]
+    host_end = len(remainder)
+    for delimiter in ("/", "?"):
+        index = remainder.find(delimiter)
+        if index != -1 and index < host_end:
+            host_end = index
+    suffix = remainder[host_end:]
+    if suffix == "":
+        suffix = "/"
+    return "https://" + host + suffix
 
 
 def passive_definition(text: str) -> bool:
@@ -517,11 +521,23 @@ class NullProof(gl.Contract):
                 "max_gap_seen": int(cov.max_gap_seen),
                 "complete": bool(fields["complete"]),
             })
+        terminal_observation = None
+        if int(claim.terminal_observation_id) != 0:
+            terminal = self.observations.get(claim.terminal_observation_id)
+            if terminal is not None:
+                terminal_observation = {
+                    "id": int(claim.terminal_observation_id),
+                    "source_id": int(terminal.source_id),
+                    "observed_at": int(terminal.observed_at),
+                    "verdict": int(terminal.verdict),
+                    "evidence_hash": Keccak256(str(terminal.evidence).encode("utf-8")).hexdigest(),
+                }
         return json.dumps(
             {
                 "definition_hash": str(claim.definition_hash),
                 "status": int(status),
                 "terminal_observation_id": int(claim.terminal_observation_id),
+                "terminal_observation": terminal_observation,
                 "coverage": coverage_items,
             },
             sort_keys=True,

@@ -1,4 +1,4 @@
 NullProof deterministic demonstration positive fixture
 
-On 23 August 2026 ACME announced an official safety recall of Model Z because of a battery defect.
-This fictional fixture exists only to demonstrate consensus-backed FOUND handling.
+At retrieval time, this fictional bulletin is the official qualifying safety-recall announcement for ACME Model Z. The bulletin is the event to adjudicate during the prospective target window.
+This fixture is intentionally stable and contains no instructions for the adjudicator.

@@ -9,12 +9,12 @@ EVENT = "An official safety recall of ACME Model Z is announced or becomes effec
 CLASSIFIER = r"You are adjudicating one prospective NullProof negative-evidence observation"
 EVIDENCE_JUDGE = r"Judge whether a source excerpt proves the qualifying event"
 
-BASE_ISO = "2026-08-23T20:00:00+00:00"
-START_ISO = "2026-08-23T20:10:00+00:00"
-MID1_ISO = "2026-08-23T20:20:00+00:00"
-MID2_ISO = "2026-08-23T20:30:00+00:00"
-END_ISO = "2026-08-23T20:40:00+00:00"
-AFTER_ISO = "2026-08-23T20:40:01+00:00"
+BASE_ISO = "2026-08-24T20:00:00+00:00"
+START_ISO = "2026-08-24T20:10:00+00:00"
+MID1_ISO = "2026-08-24T20:20:00+00:00"
+MID2_ISO = "2026-08-24T20:30:00+00:00"
+END_ISO = "2026-08-24T20:40:00+00:00"
+AFTER_ISO = "2026-08-24T20:40:01+00:00"
 
 
 def epoch(value: str) -> int:
@@ -33,12 +33,12 @@ There is no Model Z recall notice listed on this registry page.
 
 FOUND_PAGE = """
 ACME Safety Notices
-On 23 August 2026 ACME announced an official safety recall of Model Z because of a battery defect.
+At retrieval time, this bulletin is the official qualifying safety-recall announcement for ACME Model Z.
 Owners should contact an authorised service centre.
 """
 
 FOUND_EVIDENCE = (
-    "On 23 August 2026 ACME announced an official safety recall of Model Z because of a battery defect."
+    "At retrieval time, this bulletin is the official qualifying safety-recall announcement for ACME Model Z."
 )
 
 
@@ -128,7 +128,7 @@ def test_definition_must_be_passive(direct_vm, direct_deploy):
 
 def test_observation_before_window_is_rejected(direct_vm, direct_deploy):
     contract, claim_id, source_id = create_sealed(direct_vm, direct_deploy)
-    direct_vm.warp("2026-08-23T20:09:59+00:00")
+    direct_vm.warp("2026-08-24T20:09:59+00:00")
     with direct_vm.expect_revert("has not started"):
         contract.observe(claim_id, source_id)
 
