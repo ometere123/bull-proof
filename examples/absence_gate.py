@@ -8,6 +8,9 @@ class IBullProof:
     class View:
         def is_absence_established(self, claim_id: u256, expected_definition_hash: str) -> bool: ...
 
+    class Write:
+        pass
+
 
 class AbsenceGate(gl.Contract):
     bullproof_address: Address
@@ -23,7 +26,7 @@ class AbsenceGate(gl.Contract):
 
     @gl.public.write
     def open_if_absence_established(self) -> None:
-        bullproof = gl.get_contract_at(self.bullproof_address, IBullProof)
+        bullproof = IBullProof(self.bullproof_address)
         if not bullproof.view().is_absence_established(self.claim_id, self.definition_hash):
             raise gl.vm.UserError("BullProof certificate is not valid for the pinned definition")
         self.opened = True
