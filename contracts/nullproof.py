@@ -778,9 +778,6 @@ class NullProof(gl.Contract):
             claim.reason = "a required source produced consensus-backed evidence of the qualifying event"
             claim.certificate_hash = Keccak256(self._certificate_payload(claim_id, CLAIM_EVENT_FOUND).encode("utf-8")).hexdigest()
 
-        ObservationRecorded(observation_id, claim_id, source_id, u8(verdict)).emit()
-        if verdict == OBS_FOUND:
-            ClaimFinalized(claim_id, u8(CLAIM_EVENT_FOUND), certificate_hash=str(claim.certificate_hash)).emit()
         return observation_id
 
     @gl.public.write
@@ -817,12 +814,6 @@ class NullProof(gl.Contract):
         claim.finalized_at = u256(now)
         claim.reason = reason
         claim.certificate_hash = Keccak256(self._certificate_payload(claim_id, terminal).encode("utf-8")).hexdigest()
-        ClaimFinalized(
-            claim_id,
-            u8(terminal),
-            certificate_hash=str(claim.certificate_hash),
-                failing_sources=u256(failing_sources),
-        ).emit()
 
     @gl.public.view
     def get_claim(self, claim_id: u256) -> dict:
