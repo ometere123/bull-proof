@@ -1,8 +1,8 @@
-# BullProof — Standalone Intelligent Contract Submission
+# NullProof — Standalone Intelligent Contract Submission
 
 ## One-line purpose
 
-BullProof is a reusable GenLayer primitive for **prospective negative evidence**: it can establish that no qualifying event was found across a sealed set of public sources during a time window, but only when consensus-backed observations are dense enough to satisfy a precommitted maximum-gap policy.
+NullProof is a reusable GenLayer primitive for **prospective negative evidence**: it can establish that no qualifying event was found across a sealed set of public sources during a time window, but only when consensus-backed observations are dense enough to satisfy a precommitted maximum-gap policy.
 
 ## Why this is not a thin LLM wrapper
 
