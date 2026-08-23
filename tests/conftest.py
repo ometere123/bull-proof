@@ -2,9 +2,8 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _configure_direct_mode(direct_vm):
-    """Catch storage-serialization mistakes and isolate contract definitions per test."""
-    direct_vm.check_pickling = True
+def _reset_contract_registry():
+    """Keep independently deployed direct tests isolated without constraining Studio tests."""
     yield
     try:
         import genlayer.gl.genvm_contracts as contracts
