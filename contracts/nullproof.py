@@ -778,13 +778,7 @@ class NullProof(gl.Contract):
             claim.reason = "a required source produced consensus-backed evidence of the qualifying event"
             claim.certificate_hash = Keccak256(self._certificate_payload(claim_id, CLAIM_EVENT_FOUND).encode("utf-8")).hexdigest()
 
-        ObservationRecorded(
-            observation_id,
-            claim_id,
-            source_id,
-            u8(verdict),
-            observed_at=u256(now),
-        ).emit()
+        ObservationRecorded(observation_id, claim_id, source_id, u8(verdict)).emit()
         if verdict == OBS_FOUND:
             ClaimFinalized(claim_id, u8(CLAIM_EVENT_FOUND), certificate_hash=str(claim.certificate_hash)).emit()
         return observation_id
