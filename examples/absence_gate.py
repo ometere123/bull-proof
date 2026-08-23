@@ -1,10 +1,10 @@
-"""Minimal BullProof composition example; illustrative, not required for deployment."""
+"""Minimal NullProof composition example; illustrative, not required for deployment."""
 
 from genlayer import *
 
 
 @gl.contract_interface
-class IBullProof:
+class INullProof:
     class View:
         def is_absence_established(self, claim_id: u256, expected_definition_hash: str) -> bool: ...
 
@@ -13,22 +13,22 @@ class IBullProof:
 
 
 class AbsenceGate(gl.Contract):
-    bullproof_address: Address
+    nullproof_address: Address
     claim_id: u256
     definition_hash: str
     opened: bool
 
-    def __init__(self, bullproof_address: Address, claim_id: u256, definition_hash: str):
-        self.bullproof_address = bullproof_address
+    def __init__(self, nullproof_address: Address, claim_id: u256, definition_hash: str):
+        self.nullproof_address = nullproof_address
         self.claim_id = claim_id
         self.definition_hash = definition_hash
         self.opened = False
 
     @gl.public.write
     def open_if_absence_established(self) -> None:
-        bullproof = IBullProof(self.bullproof_address)
-        if not bullproof.view().is_absence_established(self.claim_id, self.definition_hash):
-            raise gl.vm.UserError("BullProof certificate is not valid for the pinned definition")
+        nullproof = INullProof(self.nullproof_address)
+        if not nullproof.view().is_absence_established(self.claim_id, self.definition_hash):
+            raise gl.vm.UserError("NullProof certificate is not valid for the pinned definition")
         self.opened = True
 
     @gl.public.view
