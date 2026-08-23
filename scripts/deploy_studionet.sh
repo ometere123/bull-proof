@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RPC="${GENLAYER_RPC:-https://studio.genlayer.com/api}"
 CONTRACT="contracts/nullproof.py"
 
 if ! command -v genlayer >/dev/null 2>&1; then
@@ -18,6 +17,7 @@ python scripts/preflight.py
 
 echo "Using the currently selected GenLayer account."
 echo "No password or private key is read from this repository."
-genlayer account show --rpc "$RPC"
+genlayer network set studionet
+genlayer account
 
-genlayer deploy --contract "$CONTRACT" --rpc "$RPC"
+genlayer deploy --contract "$CONTRACT"

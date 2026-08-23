@@ -1,0 +1,4 @@
+NullProof deterministic demonstration fixture B
+
+This public fixture contains no qualifying event for the fictional subject ACME Model Z.
+It exists only to make the protocol's NOT_FOUND lifecycle reproducible.

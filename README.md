@@ -218,7 +218,8 @@ NullProof has no constructor arguments.
 
 ```bash
 npm install -g genlayer
-genlayer deploy --contract contracts/nullproof.py --rpc https://studio.genlayer.com/api
+genlayer network set studionet
+genlayer deploy --contract contracts/nullproof.py
 ```
 
 The contract does not require a backend, database, keeper server, or frontend. Observations are ordinary contract writes and may be submitted by any caller.
