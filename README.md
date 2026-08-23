@@ -98,7 +98,7 @@ For an observation the leader:
    - `NOT_FOUND`
    - `AMBIGUOUS`
    - `UNAVAILABLE` is produced by runtime/source failure;
-4. requires a verbatim grounded excerpt for `FOUND`;
+4. requires a bounded source-grounded excerpt for `FOUND`;
 5. returns only bounded decision fields and diagnostic text.
 
 ### Validators
@@ -110,7 +110,7 @@ Each validator independently:
 1. fetches the source again;
 2. independently performs the same event classification;
 3. requires the same decision class;
-4. for `FOUND`, verifies that the leader's evidence is present in the validator's own snapshot;
+4. for `FOUND`, verifies that the leader's evidence is present in the validator's own normalized source snapshot;
 5. independently judges that the excerpt actually supports the qualifying event in the declared window.
 
 A forged leader `NOT_FOUND` is rejected when the validator independently observes `FOUND`.
@@ -216,11 +216,11 @@ Validators fetch and classify for themselves.
 
 ### Positive terminal evidence is source-grounded
 
-A `FOUND` receipt must carry a verbatim excerpt present in the validator's own snapshot and must pass a second relevance/qualification check.
+A `FOUND` receipt must carry an excerpt grounded in the validator's independently fetched, whitespace-normalized snapshot and must pass a second relevance/qualification check.
 
 ### Fail closed on uncertainty
 
-Ambiguity and source failure never extend temporal coverage.
+Ambiguity, source failure, malformed semantic output, and missed coverage never extend temporal coverage.
 
 ### No money movement
 
@@ -229,37 +229,43 @@ BullProof does not custody, transfer, lock, release, slash, or mint value. Consu
 ## Repository structure
 
 ```text
-contracts/bullproof.py          core Intelligent Contract
-tests/direct/test_bullproof.py  direct-mode protocol + adversarial tests
-docs/CONSENSUS.md               leader/validator design
-docs/THREAT_MODEL.md            attacks, assumptions, epistemic limits
-docs/INTEGRATION.md             downstream composition patterns
-examples/absence_gate.py        minimal cross-contract consumer
-scripts/preflight.py            repository/static preflight checks
-SUBMISSION.md                   reviewer-focused submission summary
+contracts/bullproof.py                     core Intelligent Contract
+tests/direct/test_bullproof.py             protocol + adversarial tests
+tests/direct/test_bullproof_hardening.py   source/security regressions
+docs/CONSENSUS.md                          leader/validator design
+docs/THREAT_MODEL.md                       attacks, assumptions, epistemic limits
+docs/INTEGRATION.md                        downstream composition patterns
+examples/absence_gate.py                   minimal cross-contract consumer
+scripts/preflight.py                       repository/static preflight checks
+SUBMISSION.md                              reviewer-focused submission summary
 ```
 
 ## Test suite
 
-The direct suite contains 17 tests covering:
+The repository has **20+ Direct Mode tests** covering:
 
 - prospective-only claim creation;
 - immutable source surfaces;
 - duplicate source rejection;
+- private/local/ambiguous URL rejection;
 - passive event definitions;
 - observation-window boundaries;
 - negative coverage accumulation;
+- unavailable and malformed observations failing closed;
 - positive terminal evidence;
 - malicious false-negative leader rejection;
 - forged evidence rejection;
+- validator field-type hardening;
 - complete temporal coverage;
 - internal coverage gaps;
 - ambiguous observations not filling gaps;
 - missing leading coverage;
 - all required sources participating;
+- cross-claim source isolation;
 - early finalization rejection;
 - post-window observation rejection;
-- requester authorization for draft mutation.
+- requester authorization and draft abort lifecycle;
+- storage pickling/serialization checks in Direct Mode.
 
 Run:
 
@@ -275,7 +281,7 @@ python -m pip install -r requirements.txt
 genvm-lint check contracts/bullproof.py
 ```
 
-GenLayer's current `genlayer-test` release is `0.29.2`; `genvm-linter` is `0.11.0`.
+The repository pins the same GenLayer testing/linter toolchain used by the recent standalone contract builds: `genlayer-test` v0.29.2 and `genvm-linter` 0.11.0.
 
 ## Deployment
 
@@ -283,8 +289,7 @@ BullProof has no constructor arguments.
 
 ```bash
 npm install -g genlayer
-genlayer network studionet
-genlayer deploy --contract contracts/bullproof.py
+genlayer deploy --contract contracts/bullproof.py --rpc https://studio.genlayer.com/api
 ```
 
 The contract does not require a backend, database, keeper server, or frontend. Observations are ordinary contract writes and may be submitted by any caller.
