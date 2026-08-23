@@ -1,20 +1,20 @@
-# BullProof
+# NullProof
 
 **Prospective negative-evidence certificates for GenLayer.**
 
-BullProof is a standalone reusable Intelligent Contract that answers a deceptively hard question:
+NullProof is a standalone reusable Intelligent Contract that answers a deceptively hard question:
 
 > Can another contract safely rely on the claim that a qualifying event was **not found** across a declared public evidence surface during a declared time window?
 
 It does **not** treat one failed search as proof of absence. It creates a sealed, prospective monitoring protocol in which independent GenLayer validators repeatedly re-observe required sources, and deterministic contract logic decides whether temporal coverage was complete enough to establish a bounded negative claim.
 
-There is intentionally **no frontend**. BullProof is infrastructure for other contracts.
+There is intentionally **no frontend**. NullProof is infrastructure for other contracts.
 
 ## Why this primitive exists
 
 Positive evidence is easy to model: one source can prove that an event happened. Negative evidence is fundamentally different. "I looked once and did not see it" does not establish that nothing appeared over an interval.
 
-BullProof makes the epistemic boundary explicit:
+NullProof makes the epistemic boundary explicit:
 
 > `ABSENCE_ESTABLISHED` means **no qualifying event was found across the sealed source set while every required source satisfied the declared maximum observation-gap policy**.
 
@@ -44,7 +44,7 @@ Terminal states cannot be rewritten.
 
 ## The core idea: temporal coverage
 
-For every required source BullProof stores:
+For every required source NullProof stores:
 
 - first successful `NOT_FOUND` observation;
 - last successful `NOT_FOUND` observation;
@@ -69,7 +69,7 @@ That means an outage at 12:10 followed by a successful check at 12:20 cannot be 
 
 ## Why claims are prospective
 
-BullProof deliberately rejects backdated claims.
+NullProof deliberately rejects backdated claims.
 
 `create_claim(...)` requires `start_at` to be at least 60 seconds in the future. The requester must add sources and call `seal_claim(...)` before monitoring begins.
 
@@ -85,7 +85,7 @@ This prevents a requester from searching history, selecting only sources that ha
 
 ## Consensus architecture
 
-BullProof uses `gl.vm.run_nondet_unsafe` with a custom validator.
+NullProof uses `gl.vm.run_nondet_unsafe` with a custom validator.
 
 ### Leader
 
@@ -93,13 +93,9 @@ For an observation the leader:
 
 1. fetches the required public source with `gl.nondet.web.render`;
 2. treats the rendered page as hostile data;
-3. asks an LLM to classify the source snapshot as:
-   - `FOUND`
-   - `NOT_FOUND`
-   - `AMBIGUOUS`
-   - `UNAVAILABLE` is produced by runtime/source failure;
-4. requires a bounded source-grounded excerpt for `FOUND`;
-5. returns only bounded decision fields and diagnostic text.
+3. asks an LLM to classify the source snapshot as `FOUND`, `NOT_FOUND`, or `AMBIGUOUS`;
+4. maps runtime/source failure to `UNAVAILABLE`;
+5. requires a bounded source-grounded excerpt for `FOUND`.
 
 ### Validators
 
@@ -115,78 +111,35 @@ Each validator independently:
 
 A forged leader `NOT_FOUND` is rejected when the validator independently observes `FOUND`.
 
-This follows GenLayer's recommended pattern for classification and settlement logic: validators independently derive the decision rather than merely validating format.
-
 ## Contract surface
 
-### Create a claim
-
 ```python
-claim_id = bullproof.create_claim(
+claim_id = nullproof.create_claim(
     "ACME Model Z",
     "An official safety recall of ACME Model Z is announced or becomes effective.",
     start_at,
     end_at,
     max_gap_seconds,
 )
-```
 
-### Add required sources
-
-```python
-source_id = bullproof.add_source(
+source_id = nullproof.add_source(
     claim_id,
     "Official recall registry",
     "https://example.com/recalls",
 )
+
+nullproof.seal_claim(claim_id)
+observation_id = nullproof.observe(claim_id, source_id)
+nullproof.finalize(claim_id)
+
+ok = nullproof.is_absence_established(claim_id, expected_definition_hash)
 ```
 
-All configured sources are required. A duplicated URL is rejected.
-
-### Seal the evidence surface
-
-```python
-bullproof.seal_claim(claim_id)
-```
-
-This writes a canonical `definition_hash` over:
-
-```text
-subject
-qualifying event definition
-start_at
-end_at
-max_gap_seconds
-ordered source labels + URLs
-```
-
-### Record an observation
-
-```python
-observation_id = bullproof.observe(claim_id, source_id)
-```
-
-Anyone may call `observe`. The requester does not control who is allowed to check the source.
-
-### Finalize
-
-```python
-bullproof.finalize(claim_id)
-```
-
-After `end_at`, finalization is deterministic. No LLM is asked whether coverage is "good enough".
-
-### Consume from another contract
-
-```python
-ok = bullproof.is_absence_established(claim_id, expected_definition_hash)
-```
-
-The expected definition hash prevents a consumer from accidentally accepting an absence certificate for a weaker source set, different event definition, wider gap policy, or different time window.
+All configured sources are required. A duplicated URL is rejected. The `definition_hash` commits to the subject, event definition, time window, maximum-gap policy, and ordered source set.
 
 ## Example use cases
 
-BullProof is intentionally domain-neutral. The same primitive can support:
+NullProof is intentionally domain-neutral. The same primitive can support:
 
 - **insurance:** no official recall or exclusion notice appeared during a coverage window;
 - **governance:** no veto notice was published before a deadline;
@@ -212,7 +165,7 @@ Validators fetch and classify for themselves.
 
 ### Negative observations carry no leader-selected evidence
 
-`NOT_FOUND`, `AMBIGUOUS`, and `UNAVAILABLE` receipts store no evidence excerpt. Their force comes from independent consensus, not from text selected by the leader.
+`NOT_FOUND`, `AMBIGUOUS`, and `UNAVAILABLE` receipts store no evidence excerpt. Their force comes from independent consensus, not text selected by the leader.
 
 ### Positive terminal evidence is source-grounded
 
@@ -224,14 +177,15 @@ Ambiguity, source failure, malformed semantic output, and missed coverage never 
 
 ### No money movement
 
-BullProof does not custody, transfer, lock, release, slash, or mint value. Consumer contracts decide what a valid BullProof certificate means for their own state.
+NullProof does not custody, transfer, lock, release, slash, or mint value. Consumer contracts decide what a valid NullProof certificate means for their own state.
 
 ## Repository structure
 
 ```text
-contracts/bullproof.py                     core Intelligent Contract
-tests/direct/test_bullproof.py             protocol + adversarial tests
-tests/direct/test_bullproof_hardening.py   source/security regressions
+contracts/nullproof.py                     core Intelligent Contract
+tests/direct/test_nullproof.py             protocol + adversarial tests
+tests/direct/test_nullproof_hardening.py   source/security regressions
+tests/integration/test_nullproof_studionet.py  StudioNet lifecycle checks
 docs/CONSENSUS.md                          leader/validator design
 docs/THREAT_MODEL.md                       attacks, assumptions, epistemic limits
 docs/INTEGRATION.md                        downstream composition patterns
@@ -242,30 +196,7 @@ SUBMISSION.md                              reviewer-focused submission summary
 
 ## Test suite
 
-The repository has **20+ Direct Mode tests** covering:
-
-- prospective-only claim creation;
-- immutable source surfaces;
-- duplicate source rejection;
-- private/local/ambiguous URL rejection;
-- passive event definitions;
-- observation-window boundaries;
-- negative coverage accumulation;
-- unavailable and malformed observations failing closed;
-- positive terminal evidence;
-- malicious false-negative leader rejection;
-- forged evidence rejection;
-- validator field-type hardening;
-- complete temporal coverage;
-- internal coverage gaps;
-- ambiguous observations not filling gaps;
-- missing leading coverage;
-- all required sources participating;
-- cross-claim source isolation;
-- early finalization rejection;
-- post-window observation rejection;
-- requester authorization and draft abort lifecycle;
-- storage pickling/serialization checks in Direct Mode.
+The repository has **20+ Direct Mode tests** covering prospective-only claim creation, immutable source surfaces, private/local URL rejection, observation-window boundaries, negative coverage accumulation, source failure, malformed observations, positive evidence, malicious leader proposals, complete temporal coverage, internal gaps, multi-source requirements, authorization, and storage serialization.
 
 Run:
 
@@ -278,25 +209,23 @@ Optional linter:
 
 ```bash
 python -m pip install -r requirements.txt
-genvm-lint check contracts/bullproof.py
+genvm-lint check contracts/nullproof.py
 ```
-
-The repository pins the same GenLayer testing/linter toolchain used by the recent standalone contract builds: `genlayer-test` v0.29.2 and `genvm-linter` 0.11.0.
 
 ## Deployment
 
-BullProof has no constructor arguments.
+NullProof has no constructor arguments.
 
 ```bash
 npm install -g genlayer
-genlayer deploy --contract contracts/bullproof.py --rpc https://studio.genlayer.com/api
+genlayer deploy --contract contracts/nullproof.py --rpc https://studio.genlayer.com/api
 ```
 
 The contract does not require a backend, database, keeper server, or frontend. Observations are ordinary contract writes and may be submitted by any caller.
 
 ## Epistemic statement
 
-BullProof proves a **bounded monitoring statement**, not universal non-existence.
+NullProof proves a **bounded monitoring statement**, not universal non-existence.
 
 A certificate is only as broad as:
 
@@ -305,7 +234,7 @@ A certificate is only as broad as:
 3. the observation window;
 4. the maximum permitted gap between successful negative observations.
 
-Those four things are deliberately committed into the immutable definition hash so downstream contracts can choose exactly what evidence policy they are willing to trust.
+Those four things are committed into the immutable definition hash so downstream contracts can choose exactly what evidence policy they are willing to trust.
 
 ## License
 
