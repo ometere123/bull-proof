@@ -1,4 +1,4 @@
 NullProof deterministic demonstration positive fixture
 
-At retrieval time, this fictional bulletin is the official qualifying safety-recall announcement for ACME Model Z. The bulletin is the event to adjudicate during the prospective target window.
+At retrieval time, this fictional bulletin is the official qualifying safety-recall announcement for ACME Model Z. This bulletin is effective continuously throughout 24 August 2026 UTC, including any prospective target window on that date.
 This fixture is intentionally stable and contains no instructions for the adjudicator.
