@@ -5,17 +5,18 @@ This is the canonical evidence record for the live NullProof run. Values below a
 ## Submission identity
 
 - Repository: https://github.com/ometere123/nullproof
-- Current submission HEAD: `bd211759d2b57a20d367f8a0ba3fd39f911bb272`
+- Evidence-record base commit: `bd211759d2b57a20d367f8a0ba3fd39f911bb272`
+- Current submission HEAD should be verified from GitHub `main` at review time.
 - Contract: `contracts/nullproof.py`
 - Contract Git blob: `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`
 - Contract SHA-256 after LF normalization: `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`
-- Deployed contract-source commit: `93ba827`
+- Deployed contract-source commit: `93ba827b7072f4dc676d8c5f13c7ffc0e44f2014`
 - Later submission commits: `7547bc7` changed the historical positive fixture; `bd211759` changed tests and documentation only.
 - Class: `NullProof`
 - Interface: `INullProof`
 - Public methods: 13 — 7 views and 6 writes
 
-The canonical deployment was created from commit `93ba827`. `git diff 93ba827..bd211759 -- contracts/nullproof.py` is empty, and the current contract blob remains `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`. StudioNet `gen_getContractCode` returned 36,883 bytes whose SHA-256 is exactly `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`. Therefore current submission HEAD contains the exact deployed contract source; later fixture/test/documentation commits were not deployments.
+The canonical deployment was created from commit `93ba827b7072f4dc676d8c5f13c7ffc0e44f2014`. `git diff 93ba827b7072f4dc676d8c5f13c7ffc0e44f2014..bd211759d2b57a20d367f8a0ba3fd39f911bb272 -- contracts/nullproof.py` is empty, and the current contract blob remains `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`. StudioNet `gen_getContractCode` returned 36,883 bytes whose SHA-256 is exactly `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`. Therefore the evidence-record base commit contains the exact deployed contract source; later fixture/test/documentation commits were not deployments. Reviewers should verify the current submission HEAD from GitHub `main` at review time.
 
 ## Verification
 
