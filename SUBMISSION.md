@@ -24,6 +24,8 @@ The complete source identity, readbacks, coverage values, and transaction hashes
 
 A one-shot oracle is `one request → one answer`. NullProof is `sealed policy → repeated observations → persistent per-source coverage → deterministic certificate`. A semantic observation can record a source snapshot, but it cannot directly settle `ABSENCE_ESTABLISHED`; only post-window arithmetic over every required source can do that.
 
+Qualifying events are positively defined—for example, “an official recall announcement is announced or becomes effective.” Individual snapshots return `NOT_FOUND`; only complete deterministic temporal coverage across every sealed source can produce `ABSENCE_ESTABLISHED`.
+
 ## Composability
 
 `examples/absence_gate.py` demonstrates the consumer interface: a downstream contract supplies both a claim ID and the expected definition hash, and opens only when `is_absence_established` returns true. The current Direct Mode harness does not execute cross-contract calls, so no fabricated runtime gate test is reported. The example is compile/lint checked and the pinned read interface is covered by the live readback; full cross-contract execution remains a StudioNet/runtime integration concern.

@@ -19,6 +19,8 @@ There is intentionally **no frontend**. NullProof is infrastructure for other co
 - Live terminal states verified: `EVENT_FOUND`, `ABSENCE_ESTABLISHED`, `INSUFFICIENT_COVERAGE`
 - Full evidence: [DEPLOYMENT.md](DEPLOYMENT.md)
 
+The canonical absence proof uses a positively defined qualifying event and derives bounded absence only from repeated consensus-backed `NOT_FOUND` observations.
+
 ## Why this primitive exists
 
 Positive evidence is easy to model: one source can prove that an event happened. Negative evidence is fundamentally different. "I looked once and did not see it" does not establish that nothing appeared over an interval.

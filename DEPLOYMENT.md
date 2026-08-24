@@ -2,19 +2,20 @@
 
 This is the canonical evidence record for the live NullProof run. Values below are complete transaction hashes and complete state hashes, not abbreviated notes.
 
-## Canonical source
+## Submission identity
 
 - Repository: https://github.com/ometere123/nullproof
-- Final `main` commit: `7547bc76bfc39bec8f9c545827f46453a4d8146c`
+- Current submission HEAD: `bd211759d2b57a20d367f8a0ba3fd39f911bb272`
 - Contract: `contracts/nullproof.py`
-- Git blob ID: `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`
-- Final source bytes after LF normalization: 36,883
-- Final source SHA-256: `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`
+- Contract Git blob: `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`
+- Contract SHA-256 after LF normalization: `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`
+- Deployed contract-source commit: `93ba827`
+- Later submission commits: `7547bc7` changed the historical positive fixture; `bd211759` changed tests and documentation only.
 - Class: `NullProof`
 - Interface: `INullProof`
 - Public methods: 13 — 7 views and 6 writes
 
-The canonical deployment was created from the contract source at commit `93ba827`. Commit `7547bc76bfc39bec8f9c545827f46453a4d8146c` changed only `fixtures/event_found.txt`; `git diff 93ba827..7547bc7 -- contracts/nullproof.py` is empty. StudioNet `gen_getContractCode` returned 36,883 bytes for the deployed address, and its SHA-256 is exactly `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`. Therefore the deployed contract bytes are byte-for-byte identical to the final repository contract file after line-ending normalization. The later fixture-only commit is recorded separately rather than misrepresented as a contract redeployment.
+The canonical deployment was created from commit `93ba827`. `git diff 93ba827..bd211759 -- contracts/nullproof.py` is empty, and the current contract blob remains `42c193d6e1d9067dbd1a4fbd42a364e37944ccdc`. StudioNet `gen_getContractCode` returned 36,883 bytes whose SHA-256 is exactly `e76a9ff911426cc5999fb3a342b32b7262cc1de8fe02859e639b4e0fa7a90413`. Therefore current submission HEAD contains the exact deployed contract source; later fixture/test/documentation commits were not deployments.
 
 ## Verification
 
@@ -77,59 +78,70 @@ Verified readback:
 - `is_event_found(1, wrong_definition_hash) == false`
 - `is_absence_established(1, correct_definition_hash) == false`
 
-## ABSENCE_ESTABLISHED live proof
+## CANONICAL ABSENCE_ESTABLISHED live proof
 
-- Claim: `4`
+- Claim: `9`
 - Subject: `ACME Model Z`
-- Event definition: `No official safety-recall announcement for ACME Model Z is found on either required registry during the target window.`
-- Window: `start_at=1787532036`, `end_at=1787532336`
+- Event definition: `An official safety-recall announcement for ACME Model Z is announced or becomes effective during the target window.`
+- Window: `start_at=1787569055`, `end_at=1787569355`
 - Maximum gap: `240` seconds
-- Definition hash: `a859a08d460392919db7de5cf5f9a2d4373aa3f179f5e04e0bb6fa644a640618`
-- Certificate hash: `7a22bf8df0950d1887ebe7d29388db0683ba230ba70f052bd9d3b02169636bc4`
+- Definition hash: `387ae9bd0f2231a2953ebb1d59ee01bd5f0188fd3a2a404a2199760cee6243a6`
+- Certificate hash: `046843db6cb05af1cc8bd784895151613aff158b2ce54897bda0add8c0544c57`
 
 ### Source 1
 
-- Source ID: `6`
+- Source ID: `16`
 - URL: `https://raw.githubusercontent.com/ometere123/nullproof/main/fixtures/no_event_a.txt`
 - Successful count: `2`
-- First successful timestamp: `1787532056`
-- Last successful timestamp: `1787532183`
-- Leading gap: `20`
-- Trailing gap: `153`
-- Maximum internal gap: `127`
-- Maximum observed gap: `127`
+- First successful timestamp: `1787569077`
+- Last successful timestamp: `1787569148`
+- Leading gap: `22`
+- Trailing gap: `207`
+- Maximum internal gap: `71`
+- Maximum observed gap: `71`
 - Unavailable count: `0`
 - Ambiguous count: `0`
 - Complete: `true`
-- Observation IDs: `8`, `10`
-- Observation transactions: `0x39730989e5e1e9542a23c7d89a60e94bea3ca538a005aa33022a08eb88b83d16`, `0x494f4b20ea9b0e688acfbf49df0173edb7c89d5b54a916d0579797f772b7d21f`
+- Observation IDs: `20`, `22`
+- Observation transactions: `0x9920b1306aef8246fd3574b36610e3b72714daf49f5bb82ae8a5ad04b8ff97fa`, `0xbe1b3623ab689ca8af5c74be192b132328a7d4cdc71036b379c1ac817aceb3ee`
 
 ### Source 2
 
-- Source ID: `7`
+- Source ID: `17`
 - URL: `https://raw.githubusercontent.com/ometere123/nullproof/main/fixtures/no_event_b.txt`
 - Successful count: `2`
-- First successful timestamp: `1787532071`
-- Last successful timestamp: `1787532210`
-- Leading gap: `35`
-- Trailing gap: `126`
-- Maximum internal gap: `139`
-- Maximum observed gap: `139`
+- First successful timestamp: `1787569112`
+- Last successful timestamp: `1787569179`
+- Leading gap: `57`
+- Trailing gap: `176`
+- Maximum internal gap: `67`
+- Maximum observed gap: `67`
 - Unavailable count: `0`
 - Ambiguous count: `0`
 - Complete: `true`
-- Observation IDs: `9`, `11`
-- Observation transactions: `0x7eaa69f6e154b6f677a15809f31510cf4937988eab1c59db2d600d892a4d5f26`, `0xcb01968ee3770a664fe19eedc0de56c9c3ddc4f17aed6288729df980edcc8d83`
+- Observation IDs: `21`, `23`
+- Observation transactions: `0x9ac03ee2eb9107cab2e2ef1437b6e3117ecfd0bce2e2fdbbf6f9a9ede59d98d1`, `0xaf35dc5daafef95db08e91e9b824c1afea27d19fd24e2799379f00841754842b`
 
-Finalization transaction: `0xffb5ec115c0840b69fb1dcd066fecc48090e9cf38060d05d537837fdc7c17473`
+Transactions: create `0x69396da479fd39c5afad9f61179625fd029b3d3c81568e03ad9eb5cd323643e5`; add source A `0x7417d99295722240e685fb40a3f60f4041973e5a7a7fee60be7efc99de450c65`; add source B was finalized successfully but its CLI hash was not retained in the captured output; seal `0xb9c6dabf3d5d70e95353dcf3ada8f1ac7a725c2dc6ad9bc8601625f8c53a2ca3`; finalize `0xc91bfd15215ff0e10d3395a0cd06b5e3e99ed897ca745bd9df91cb7d2da72f2a`.
 
 Verified readback:
 
 - `status_name == ABSENCE_ESTABLISHED`
 - every required source `complete == true`
 - every leading, trailing, and internal gap is `<= 240`
-- `is_absence_established(4, correct_definition_hash) == true`
-- `is_absence_established(4, wrong_definition_hash) == false`
+- `is_absence_established(9, correct_definition_hash) == true`
+- `is_absence_established(9, wrong_definition_hash) == false`
+
+The qualifying event is positively defined; each persisted observation is `NOT_FOUND`. Only complete deterministic temporal coverage produces the terminal absence state.
+
+## HISTORICAL ABSENCE PROOF
+
+Earlier claim `4` reached `ABSENCE_ESTABLISHED` successfully and remains retained for transparency. Its event definition was negatively phrased (`No official ... is found ...`), so claim `9` supersedes it as the canonical flagship absence demonstration. Claim `4` was mechanically valid; claim `9` is semantically cleaner.
+
+- Definition hash: `a859a08d460392919db7de5cf5f9a2d4373aa3f179f5e04e0bb6fa644a640618`
+- Certificate hash: `7a22bf8df0950d1887ebe7d29388db0683ba230ba70f052bd9d3b02169636bc4`
+- Finalization transaction: `0xffb5ec115c0840b69fb1dcd066fecc48090e9cf38060d05d537837fdc7c17473`
+- Sources: IDs `6` and `7`, both complete; maximum internal gaps `127` and `139`; correct hash readback `true`; wrong hash readback `false`.
 
 ## INSUFFICIENT_COVERAGE live proof
 
