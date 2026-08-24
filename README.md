@@ -10,6 +10,15 @@ It does **not** treat one failed search as proof of absence. It creates a sealed
 
 There is intentionally **no frontend**. NullProof is infrastructure for other contracts.
 
+## Verified implementation
+
+- Direct Mode: **41 passed** under Linux/WSL
+- StudioNet integration: **3/3 passed**
+- Canonical StudioNet contract: `0x26b9FAdd9cCAB67D3b813CBBcf77400f92d0f31d`
+- Deployment transaction: `0xc10fbee5b9c1f225ffd322d8e67d633854cfeb1173307fe597898557e3f1fc89`
+- Live terminal states verified: `EVENT_FOUND`, `ABSENCE_ESTABLISHED`, `INSUFFICIENT_COVERAGE`
+- Full evidence: [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ## Why this primitive exists
 
 Positive evidence is easy to model: one source can prove that an event happened. Negative evidence is fundamentally different. "I looked once and did not see it" does not establish that nothing appeared over an interval.
@@ -196,7 +205,7 @@ SUBMISSION.md                              reviewer-focused submission summary
 
 ## Test suite
 
-The repository has **20+ Direct Mode tests** covering prospective-only claim creation, immutable source surfaces, private/local URL rejection, observation-window boundaries, negative coverage accumulation, source failure, malformed observations, positive evidence, malicious leader proposals, complete temporal coverage, internal gaps, multi-source requirements, authorization, and storage serialization.
+The repository has **41 Direct Mode tests** covering prospective-only claim creation, immutable source surfaces, private/local URL rejection, observation-window boundaries, exact and plus-one leading/trailing/internal gap transitions, permanent oversized gaps, negative coverage accumulation, source failure, malformed observations, positive evidence, malicious leader proposals, semantic evidence qualification, certificate sensitivity, complete temporal coverage, internal gaps, multi-source requirements, authorization, and storage serialization.
 
 Run:
 

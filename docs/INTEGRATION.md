@@ -79,3 +79,7 @@ class INullProof:
 ```
 
 The write surface stays deliberately small. Consumers generally need only observation/finalization, while claim authors configure the evidence policy before the monitoring window begins.
+
+## Direct Mode limitation
+
+The installed Direct Mode harness does not execute cross-contract calls, so the repository does not claim a Direct Mode `AbsenceGate` runtime test. `examples/absence_gate.py` is the minimal consumer implementation and is statically compiled/linted. Its correctness boundary is explicit: the gate requires the terminal absence state and the exact definition hash; `MONITORING`, `INSUFFICIENT_COVERAGE`, and a mismatched hash remain closed.

@@ -164,6 +164,61 @@ def test_found_event_is_terminal_and_requires_grounded_evidence(direct_vm, direc
     assert contract.is_absence_established(claim_id, claim["definition_hash"]) is False
     assert direct_vm.run_validator() is True
 
+    with direct_vm.expect_revert("claim is not monitoring"):
+        contract.observe(claim_id, source_id)
+    with direct_vm.expect_revert("claim is not awaiting finalization"):
+        contract.finalize(claim_id)
+
+
+def test_found_certificate_changes_for_distinct_terminal_observation_evidence(direct_vm, direct_deploy):
+    contract, first_claim, first_source = create_sealed(direct_vm, direct_deploy)
+    mock_found(direct_vm)
+    direct_vm.warp(START_ISO)
+    contract.observe(first_claim, first_source)
+    first = contract.get_claim(first_claim)
+
+    direct_vm.warp(BASE_ISO)
+    second_claim = contract.create_claim(SUBJECT, EVENT, START, END, GAP)
+    second_source = contract.add_source(second_claim, "Official recall registry", URL)
+    contract.seal_claim(second_claim)
+    direct_vm.clear_mocks()
+    second_evidence = "This is a distinct grounded recall excerpt for the same subject."
+    direct_vm.mock_web(r".*example\.com/recalls.*", {"status": 200, "body": second_evidence})
+    direct_vm.mock_llm(
+        CLASSIFIER,
+        {"verdict": "FOUND", "reason": "same event, distinct excerpt", "evidence": second_evidence},
+    )
+    direct_vm.mock_llm(EVIDENCE_JUDGE, "PASS")
+    direct_vm.warp(START_ISO)
+    contract.observe(second_claim, second_source)
+    second = contract.get_claim(second_claim)
+
+    assert first["definition_hash"] == second["definition_hash"]
+    assert first["certificate_hash"] != second["certificate_hash"]
+
+
+def test_certificate_changes_when_legitimate_coverage_state_changes(direct_vm, direct_deploy):
+    contract, complete_claim, complete_source = create_sealed(direct_vm, direct_deploy)
+    for when in (START_ISO, MID1_ISO, MID2_ISO, END_ISO):
+        observe_not_found(direct_vm, contract, complete_claim, complete_source, when)
+    direct_vm.warp(AFTER_ISO)
+    contract.finalize(complete_claim)
+    complete = contract.get_claim(complete_claim)
+
+    direct_vm.warp(BASE_ISO)
+    incomplete_claim = contract.create_claim(SUBJECT, EVENT, START, END, GAP)
+    incomplete_source = contract.add_source(incomplete_claim, "Official recall registry", URL)
+    contract.seal_claim(incomplete_claim)
+    observe_not_found(direct_vm, contract, incomplete_claim, incomplete_source, START_ISO)
+    direct_vm.warp(AFTER_ISO)
+    contract.finalize(incomplete_claim)
+    incomplete = contract.get_claim(incomplete_claim)
+
+    assert complete["definition_hash"] == incomplete["definition_hash"]
+    assert complete["status_name"] == "ABSENCE_ESTABLISHED"
+    assert incomplete["status_name"] == "INSUFFICIENT_COVERAGE"
+    assert complete["certificate_hash"] != incomplete["certificate_hash"]
+
 
 def test_validator_rejects_forged_false_negative(direct_vm, direct_deploy):
     contract, claim_id, source_id = create_sealed(direct_vm, direct_deploy)
@@ -211,6 +266,10 @@ def test_complete_temporal_coverage_establishes_absence(direct_vm, direct_deploy
     assert len(claim["certificate_hash"]) == 64
     assert contract.is_absence_established(claim_id, claim["definition_hash"]) is True
     assert contract.is_absence_established(claim_id, "00" * 32) is False
+    with direct_vm.expect_revert("claim is not monitoring"):
+        contract.observe(claim_id, source_id)
+    with direct_vm.expect_revert("claim is not awaiting finalization"):
+        contract.finalize(claim_id)
 
 
 def test_internal_gap_prevents_absence_certificate(direct_vm, direct_deploy):
@@ -226,6 +285,10 @@ def test_internal_gap_prevents_absence_certificate(direct_vm, direct_deploy):
     assert coverage["max_internal_gap"] == END - START
     assert coverage["complete"] is False
     assert claim["status_name"] == "INSUFFICIENT_COVERAGE"
+    with direct_vm.expect_revert("claim is not monitoring"):
+        contract.observe(claim_id, source_id)
+    with direct_vm.expect_revert("claim is not awaiting finalization"):
+        contract.finalize(claim_id)
 
 
 def test_ambiguous_observation_does_not_fill_a_gap(direct_vm, direct_deploy):

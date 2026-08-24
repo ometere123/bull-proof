@@ -4,6 +4,30 @@
 
 NullProof is a reusable GenLayer primitive for **prospective negative evidence**: it can establish that no qualifying event was found across a sealed set of public sources during a time window, but only when consensus-backed observations are dense enough to satisfy a precommitted maximum-gap policy.
 
+## Why GenLayer is necessary
+
+Traditional deterministic smart contracts cannot semantically interpret arbitrary public web evidence. A centralized oracle would make one trusted reporter authoritative. NullProof instead uses GenLayer validators to independently fetch and semantically classify each source snapshot, while deterministic contract logic accumulates temporal state and settles the terminal certificate.
+
+## Live proof
+
+- Canonical contract: `0x26b9FAdd9cCAB67D3b813CBBcf77400f92d0f31d`
+- Deployment transaction: `0xc10fbee5b9c1f225ffd322d8e67d633854cfeb1173307fe597898557e3f1fc89`
+- Direct Mode: 41 passed
+- StudioNet integration: 3/3 passed
+- `EVENT_FOUND`: verified live
+- `ABSENCE_ESTABLISHED`: verified live
+- `INSUFFICIENT_COVERAGE`: verified live fail-closed
+
+The complete source identity, readbacks, coverage values, and transaction hashes are in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+## Why this is not a one-shot oracle
+
+A one-shot oracle is `one request → one answer`. NullProof is `sealed policy → repeated observations → persistent per-source coverage → deterministic certificate`. A semantic observation can record a source snapshot, but it cannot directly settle `ABSENCE_ESTABLISHED`; only post-window arithmetic over every required source can do that.
+
+## Composability
+
+`examples/absence_gate.py` demonstrates the consumer interface: a downstream contract supplies both a claim ID and the expected definition hash, and opens only when `is_absence_established` returns true. The current Direct Mode harness does not execute cross-contract calls, so no fabricated runtime gate test is reported. The example is compile/lint checked and the pinned read interface is covered by the live readback; full cross-contract execution remains a StudioNet/runtime integration concern.
+
 ## Why this is not a thin LLM wrapper
 
 The LLM handles only the semantic observation at each source snapshot.

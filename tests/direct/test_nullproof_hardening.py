@@ -35,6 +35,16 @@ def new_sealed(vm, deploy, url="https://example.com/recalls"):
     return contract, claim_id, source_id
 
 
+def observe_not_found(vm, contract, claim_id, source_id, when):
+    vm.clear_mocks()
+    vm.mock_web(r".*example\.com/recalls.*", {"status": 200, "body": "No qualifying event is listed."})
+    vm.mock_llm(CLASSIFIER, {"verdict": "NOT_FOUND", "reason": "none", "evidence": ""})
+    vm.warp(when)
+    observation_id = contract.observe(claim_id, source_id)
+    assert vm.run_validator() is True
+    return observation_id
+
+
 def test_url_gate_rejects_private_local_numeric_and_ambiguous_targets(direct_vm, direct_deploy):
     contract, claim_id = new_draft(direct_vm, direct_deploy)
 
@@ -181,6 +191,17 @@ def test_validator_rejects_found_when_independent_validator_is_ambiguous(direct_
     ) is False
 
 
+def test_validator_rejects_textually_present_but_semantically_irrelevant_evidence(direct_vm, direct_deploy):
+    contract, claim_id, source_id = new_sealed(direct_vm, direct_deploy)
+    irrelevant = "ACME Model Z recall discussion is unrelated to the official qualifying event."
+    direct_vm.mock_web(r".*example\.com/recalls.*", {"status": 200, "body": irrelevant})
+    direct_vm.mock_llm(CLASSIFIER, {"verdict": "FOUND", "reason": "text mentions recall", "evidence": irrelevant})
+    direct_vm.mock_llm(r"Judge whether a source excerpt proves.*", "FAIL")
+    direct_vm.warp(START_ISO)
+    contract.observe(claim_id, source_id)
+    assert direct_vm.run_validator() is False
+
+
 def test_validator_rejects_boolean_and_invalid_numeric_verdicts(direct_vm, direct_deploy):
     contract, claim_id, source_id = new_sealed(direct_vm, direct_deploy)
     direct_vm.mock_web(r".*example\.com/recalls.*", {"status": 200, "body": "No qualifying event is listed."})
@@ -202,33 +223,134 @@ def test_hostile_source_instructions_do_not_become_authority(direct_vm, direct_d
     assert contract.get_observation(observation_id)["verdict_name"] == "NOT_FOUND"
 
 
-def test_coverage_exact_boundaries_are_inclusive_and_plus_one_fails():
-    def complete(start, end, gap, first, last, internal):
-        return first - start <= gap and end - last <= gap and internal <= gap
+def iso_at(timestamp: int) -> str:
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
-    exact = complete(100, 300, 100, 200, 200, 100)
-    assert exact is True
-    assert complete(100, 300, 100, 201, 200, 100) is False
-    assert complete(100, 300, 100, 200, 199, 100) is False
-    assert complete(100, 300, 100, 100, 300, 101) is False
+
+AFTER_ISO = iso_at(END + 1)
+
+
+def boundary_claim(vm, deploy, gap=600):
+    vm.warp(BASE_ISO)
+    contract = deploy(CONTRACT)
+    claim_id = contract.create_claim(SUBJECT, EVENT, START, END, gap)
+    source_id = contract.add_source(claim_id, "Registry", "https://example.com/recalls")
+    contract.seal_claim(claim_id)
+    return contract, claim_id, source_id
+
+
+def finalize_boundary(vm, contract, claim_id):
+    vm.warp(AFTER_ISO)
+    contract.finalize(claim_id)
+    return contract.get_claim(claim_id)
+
+
+def test_leading_gap_exact_is_accepted_by_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(START + 600))
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(START + 1200))
+    observe_not_found(direct_vm, contract, claim_id, source_id, END_ISO)
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["leading_gap"] == 600
+    assert coverage["complete"] is True
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "ABSENCE_ESTABLISHED"
+
+
+def test_leading_gap_plus_one_fails_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(START + 601))
+    observe_not_found(direct_vm, contract, claim_id, source_id, END_ISO)
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["leading_gap"] == 601
+    assert coverage["complete"] is False
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "INSUFFICIENT_COVERAGE"
+
+
+def test_trailing_gap_exact_is_accepted_by_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    observe_not_found(direct_vm, contract, claim_id, source_id, START_ISO)
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(END - 1200))
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(END - 600))
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["trailing_gap"] == 600
+    assert coverage["complete"] is True
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "ABSENCE_ESTABLISHED"
+
+
+def test_trailing_gap_plus_one_fails_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    observe_not_found(direct_vm, contract, claim_id, source_id, START_ISO)
+    observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(END - 601))
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["trailing_gap"] == 601
+    assert coverage["complete"] is False
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "INSUFFICIENT_COVERAGE"
+
+
+def test_internal_gap_exact_is_accepted_by_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    for when in (START, START + 600, END - 600):
+        observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(when))
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["max_internal_gap"] == 600
+    assert coverage["complete"] is True
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "ABSENCE_ESTABLISHED"
+
+
+def test_internal_gap_plus_one_fails_real_finalization(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    for when in (START, START + 601, END - 600):
+        observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(when))
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["max_internal_gap"] == 601
+    assert coverage["complete"] is False
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "INSUFFICIENT_COVERAGE"
+
+
+def test_oversized_internal_gap_is_permanent_after_later_dense_observations(direct_vm, direct_deploy):
+    contract, claim_id, source_id = boundary_claim(direct_vm, direct_deploy)
+    for when in (START, START + 601, START + 631, END - 600):
+        observe_not_found(direct_vm, contract, claim_id, source_id, iso_at(when))
+    coverage = contract.get_coverage(claim_id, source_id)
+    assert coverage["max_internal_gap"] == 601
+    assert coverage["complete"] is False
+    assert finalize_boundary(direct_vm, contract, claim_id)["status_name"] == "INSUFFICIENT_COVERAGE"
 
 
 def test_definition_hash_changes_when_policy_changes(direct_vm, direct_deploy):
     direct_vm.warp(BASE_ISO)
     contract = direct_deploy(CONTRACT)
+    base = (SUBJECT, EVENT, START, END, GAP, (("Registry", "https://example.com/recalls"),))
     policies = (
-        (SUBJECT, EVENT, START, END, GAP, ("https://example.com/recalls",)),
-        ("ACME Model Y", EVENT, START, END, GAP, ("https://example.com/recalls",)),
-        (SUBJECT, "An official safety notice is published for ACME Model Z.", START, END, GAP, ("https://example.com/recalls",)),
-        (SUBJECT, EVENT, START + 1, END, GAP, ("https://example.com/recalls",)),
-        (SUBJECT, EVENT, START, END, GAP - 1, ("https://example.com/recalls",)),
-        (SUBJECT, EVENT, START, END, GAP, ("https://example.com/recalls", "https://example.org/notices")),
+        base,
+        ("ACME Model Y", EVENT, START, END, GAP, base[5]),
+        (SUBJECT, "An official safety notice is published for ACME Model Z.", START, END, GAP, base[5]),
+        (SUBJECT, EVENT, START + 1, END, GAP, base[5]),
+        (SUBJECT, EVENT, START, END + 1, GAP, base[5]),
+        (SUBJECT, EVENT, START, END, GAP - 1, base[5]),
+        (SUBJECT, EVENT, START, END, GAP, (("Registry", "https://example.org/notices"),)),
+        (SUBJECT, EVENT, START, END, GAP, (("Alternate registry", "https://example.com/recalls"),)),
+        (SUBJECT, EVENT, START, END, GAP, (base[5][0], ("Mirror", "https://example.org/notices"))),
+        (SUBJECT, EVENT, START, END, GAP, (("Mirror", "https://example.org/notices"), base[5][0])),
     )
     hashes = []
     for subject, event, start, end, gap, urls in policies:
         claim_id = contract.create_claim(subject, event, start, end, gap)
-        for index, url in enumerate(urls):
-            contract.add_source(claim_id, f"Registry {index}", url)
+        for label, url in urls:
+            contract.add_source(claim_id, label, url)
         contract.seal_claim(claim_id)
         hashes.append(contract.get_claim(claim_id)["definition_hash"])
     assert len(set(hashes)) == len(hashes)
+
+
+def test_canonical_equivalent_urls_produce_the_same_definition_hash(direct_vm, direct_deploy):
+    direct_vm.warp(BASE_ISO)
+    contract = direct_deploy(CONTRACT)
+    first = contract.create_claim(SUBJECT, EVENT, START, END, GAP)
+    contract.add_source(first, "Registry", "HTTPS://EXAMPLE.com/recalls#ignored")
+    contract.seal_claim(first)
+    second = contract.create_claim(SUBJECT, EVENT, START, END, GAP)
+    contract.add_source(second, "Registry", "https://example.com/recalls")
+    contract.seal_claim(second)
+    assert contract.get_source(1)["url"] == contract.get_source(2)["url"] == "https://example.com/recalls"
+    assert contract.get_claim(first)["definition_hash"] == contract.get_claim(second)["definition_hash"]

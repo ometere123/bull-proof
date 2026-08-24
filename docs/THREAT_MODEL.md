@@ -28,9 +28,15 @@ Mitigation: the source set is immutable after `seal_claim`.
 
 Mitigation: validators independently fetch and classify the source. A validator that sees `FOUND` rejects a `NOT_FOUND` leader result.
 
+## Malicious leader returns FOUND when no event exists
+
+Mitigation: validators independently fetch and classify the same sealed URL. A validator that sees `NOT_FOUND` or `AMBIGUOUS` rejects a `FOUND` leader result. A single leader cannot settle `EVENT_FOUND` by assertion alone.
+
 ## Malicious leader fabricates FOUND evidence
 
 Mitigation: the excerpt must occur verbatim in the validator's independently fetched page and pass an independent event/window relevance judgment.
+
+Textual presence is not enough. An excerpt can mention the subject or event words while being historical, hypothetical, unrelated, or semantically non-probative; the validator's independent evidence judgment must still qualify it.
 
 ## Source outage treated as negative evidence
 
@@ -64,9 +70,27 @@ This reduces, but cannot mathematically eliminate, shared model failure. Consume
 
 If the material event class differs, validators disagree and normal consensus does not accept the proposed observation. This is safer than silently recording a false negative.
 
+## Shared-model correlated failure
+
+Not eliminated. Validators may use overlapping model families or may be exposed to the same adversarial source. NullProof reduces single-node authority through independent refetching, exact verdict agreement, grounded evidence, and fail-closed disagreement, but it cannot mathematically eliminate correlated model or source failure.
+
+## URL ambiguity and private targets
+
+Mitigation: only HTTPS public DNS hosts are accepted; userinfo, ports, fragments, encoded characters, local/private suffixes, numeric and private IP-like hosts, and malformed labels are rejected. Stored URLs are canonicalized before duplicate detection and definition hashing.
+
+## Policy substitution and definition mismatch
+
+The requester chooses the evidence surface, which is an explicit limitation. Sealing commits subject, event definition, time window, maximum gap, ordered source labels, and canonical URLs into `definition_hash`. Consumers must pin that exact hash; a wrong hash returns false even when the claim ID is correct.
+
+## Semantically weak policy
+
+Not prevented. NullProof cannot make a vague event definition or untrustworthy source authoritative. Consumers must review the subject, event definition, source authority, window, and maximum gap before accepting a certificate.
+
 ## Observer griefing
 
 Observation is permissionless. A caller can only record `AMBIGUOUS` or `UNAVAILABLE` when consensus agrees with that source state. Such observations do not destroy earlier successful coverage; they simply do not fill time.
+
+Repeated observations also consume network/consensus capacity. This is an operational and economic limitation, not a path to a false absence: unavailable, ambiguous, late, or missing observations fail coverage closed.
 
 ## Universal absence
 
